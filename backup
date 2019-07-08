@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # Die function to echo to stderr, will be called inside usage function
 die() { echo "$@" >&2; exit 1; }
 usage() { die "usage: $0 (-R|-S) home-dir archive-dir"; }
@@ -15,12 +16,24 @@ esac
 
 # Store the second argument in variable
 # Second variable is the user directory
-user=$2
+homeDir=$2
 
 # Store third argument in variable
 # This is where the back up directory will be
 backupDir=$3
 
-echo $save
-echo $user
-echo $backupDir
+# Make sure arguments are what we want them to be.
+# Make sure second and third arguments are directories
+# check if home directory is absolute
+[[ $homeDir = /* ]] || die "$0: directories must be absolute"
+[[ -e $homeDir ]] || die "$0: "$homeDir" doesn't exist" # does the directory exist?
+[[ -d $homeDir ]] || die "$0: "$homeDir" is not a directory" # is this a directory?
+[[ -r $homeDir ]] || die "$0: "$homeDir" is not readable" # is this readable
+[[ -x $homeDir ]] || die "$0: "$homeDir" is not executable" # is this executable?
+# check if backup directory is absolute
+[[ $backupDir = /* ]] || die "$0: directories must be absolute"
+[[ -e $backupDir ]] || die "$0: "$backupDir" doesn't exist" # does the directory exist?
+[[ -d $backupDir ]] || die "$0: "$backupDir" is not a directory" # is this a directory?
+[[ -r $backupDir ]] || die "$0: "$backupDir" is not readable" # is this readable
+[[ -x $backupDir ]] || die "$0: "$backupDir" is not executable" # is this executable?
+[[ -w $backupDir ]] || die "$0: "$backupDir" is not writeable" # is this writeable?
