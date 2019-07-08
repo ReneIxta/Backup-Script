@@ -1,4 +1,26 @@
-!#bin/bash
+#!/bin/bash
+# Die function to echo to stderr, will be called inside usage function
+die() { echo "$@" >&2; exit 1; }
+usage() { die "usage: $0 (-R|-S) home-dir archive-dir"; }
 
+# Parse arguments and make sure there are three
+(( $# == 3 )) || usage
 
-echo Hello, World!
+# Case statement to set up "flags" for first arguments
+case "$1" in
+-S) save=true;;
+-R) save=false;;
+*) usage;;
+esac
+
+# Store the second argument in variable
+# Second variable is the user directory
+user=$2
+
+# Store third argument in variable
+# This is where the back up directory will be
+backupDir=$3
+
+echo $save
+echo $user
+echo $backupDir
