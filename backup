@@ -37,3 +37,24 @@ backupDir=$3
 [[ -r $backupDir ]] || die "$0: "$backupDir" is not readable" # is this readable
 [[ -x $backupDir ]] || die "$0: "$backupDir" is not executable" # is this executable?
 [[ -w $backupDir ]] || die "$0: "$backupDir" is not writeable" # is this writeable?
+
+#create what-is-here file
+data=$backupDir/what-is-here
+
+# If user used -S argument then we must save all the user's directories
+# into our backup directory.
+if $save # if save is true do the following
+then
+    [[ -w $backupDir ]] || die "$0: "$backupDir" is not writeable" # is this writeable?
+    > "$data"
+    for user in $(ls "$homeDir") #loop through all users in home directory
+    do
+        tarfile=$backupDir/$user.tgz
+        tar -C "$homeDir/$user" -czf "$tarfile"
+        let time=$(date +%s) # backup date in epoch seconds
+        let fileCount=$(tar tvf "$tarfile" | grep -c '^-') # count all files
+        let dirCount=$(tar tvf "$tarfile" | grep -c '^d') # count all directories
+        let byteCount=$(wc -c <"$tarfile") #count bytes
+        echo "$user, $home/$user, $time, $fileCount, $dirCount, $byteCount" >> "$data"
+    done
+fi
