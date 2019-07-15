@@ -40,6 +40,7 @@ backupDir=$3
 
 #create what-is-here file
 data=$backupDir/what-is-here
+scratch=/tmp/workdir
 
 # If user used -S argument then we must save all the user's directories
 # into our backup directory.
@@ -50,11 +51,33 @@ then
     for user in $(ls "$homeDir") #loop through all users in home directory
     do
         tarfile=$backupDir/$user.tgz
-        tar -C "$homeDir/$user" -czf "$tarfile"
+        tar -czvf $tarfile $homeDir/$user
         let time=$(date +%s) # backup date in epoch seconds
         let fileCount=$(tar tvf "$tarfile" | grep -c '^-') # count all files
         let dirCount=$(tar tvf "$tarfile" | grep -c '^d') # count all directories
-        let byteCount=$(wc -c <"$tarfile") #count bytes
-        echo "$user, $home/$user, $time, $fileCount, $dirCount, $byteCount" >> "$data"
+        #let byteCount=$(tar tvf "$tarfile" | wc -c) #count bytes
+        echo "$user, $home/$user, $time, $fileCount, $dirCount" >> "$data"
     done
+else #user passed -R argument
+    while read line
+    do
+        user=$(echo $line | cut -d, -f1)
+        tarfile=$backupDir/$user.tgz
+        if [[ ! -f $tarfile ]]
+        then
+            echo "$0: No backup available for $user" >&2
+            continue
+        fi
+        rm -rf "$scratch"
+        mkdir -p "$scratch"
+        cd "$scratch"
+        tar -xf "$tarfile"
+        find -type f |
+        while read f
+        do
+        echo $f
+            [[ -e $homeDir/$user/$f ]] || cp --parents "$f" "$homeDir/$user/$f"
+        done
+        rm -rf "$scratch"
+    done < "$data"
 fi
